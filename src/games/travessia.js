@@ -280,12 +280,12 @@ const LEVELS = [
     ids: ['pai', 'mae', 'policial', 'ladrao', 'filho1', 'filho2', 'filha1', 'filha2', 'cao'] },
   { id: 'muito', name: 'Muito difícil', blurb: 'Dois ladrões, dois policiais e o cachorro no mesmo rio.', novo: 'ladrao',
     ids: ['pai', 'mae', 'policial', 'policial2', 'ladrao', 'ladrao2', 'filho1', 'filho2', 'filha1', 'filha2', 'cao'] },
-  // semAjuda: nível sem dica e sem desfazer depois de um erro (quebrou uma regra, recomeça do início)
-  { id: 'ngplus', name: 'NG+', extra: true, semAjuda: true, novo: 'criancas', regras: ['criancas'],
+  // erroRecomeca: o erro não se desfaz; quebrou uma regra, a partida volta do início
+  { id: 'ngplus', name: 'NG+', extra: true, erroRecomeca: true, novo: 'criancas', regras: ['criancas'],
     blurb: 'A revanche do Muito difícil, com dois cachorros e crianças que nunca podem ficar sem um adulto responsável.',
     ids: ['pai', 'mae', 'policial', 'policial2', 'ladrao', 'ladrao2', 'filho1', 'filho2', 'filha1', 'filha2', 'cao', 'cao2'] },
   // Nível Danilo: a família do Difícil, mas com três lugares (partida, ilha e chegada) e regras novas
-  { id: 'danilo', name: 'Danilo', extra: true, semAjuda: true, novo: ['rota', 'lotacao', 'correnteza', 'caoPai'], regras: ['caoPai'],
+  { id: 'danilo', name: 'Danilo', extra: true, erroRecomeca: true, novo: ['rota', 'lotacao', 'correnteza', 'caoPai'], regras: ['caoPai'],
     ilha: { cap: 4, correnteza: ['pol'] },
     blurb: 'Menos gente e regras novas: uma ilha no meio do rio, correnteza do lado da chegada e um cachorro que não suporta o ladrão.',
     ids: ['pai', 'mae', 'policial', 'ladrao', 'filho1', 'filho2', 'filha1', 'filha2', 'cao'] },
@@ -700,8 +700,8 @@ function drawBg() {
       html: 'As crianças nunca podem ficar <b>sem um adulto responsável</b> por perto: o pai, a mãe ou um policial. O ladrão não conta.' });
     if ((l.regras || []).includes('caoPai')) items.push({ key: 'caoPai', icon: figSVG('cao', 'pet', 'ico-fig', '4 -2 62 62'), novo: isNew('caoPai'),
       html: 'O cachorro não suporta o ladrão: os dois só podem ficar no mesmo lugar se <b>o pai</b> também estiver.' });
-    if (l.semAjuda) items.unshift({ key: 'semAjuda', icon: RESTART_ICO,
-      html: '<b>Sem dicas</b> neste nível. Quebrou uma regra, a partida volta <b>do início</b>.' });
+    if (l.erroRecomeca) items.unshift({ key: 'erroRecomeca', icon: RESTART_ICO,
+      html: 'Neste nível não dá para desfazer um erro: quebrou uma regra, a partida volta <b>do início</b>.' });
     return items;
   }
 
@@ -796,7 +796,7 @@ function drawBg() {
     if (status !== 'play') return;
     if (!riders.length) return ctx.say(S.moves ? 'Quem vai agora?' : 'Sua vez', `Toque em alguém ${DA[S.raft]} para embarcar. Cabem 2 na jangada.` +
       (onIsle ? ' Da ilha, a jangada pode voltar para a partida ou seguir para a chegada.' : '') +
-      (LV.semAjuda && !S.moves ? ' Aqui não há dicas, e quem quebrar uma regra recomeça do início.' : ''));
+      (LV.erroRecomeca && !S.moves ? ' Aqui, quem quebrar uma regra recomeça do início.' : ''));
     if (!riders.some(id => CAST[id].driver)) return ctx.say('Falta quem conduza', `${cap1(crewArt(riders))} não ${riders.length > 1 ? 'sabem' : 'sabe'} conduzir. Embarque ${count('pol') > 1 ? 'o pai, a mãe ou um policial' : 'o pai, a mãe ou o policial'}.`);
     const crew = `Na jangada: ${crewNames(riders)}.`;
     if (!LV.ilha) return ctx.say('Pronto para atravessar', `${crew} Toque em Atravessar.`);
@@ -857,9 +857,9 @@ function drawBg() {
       if (fail) {
         status = 'fail'; failInfo = fail;
         render(0);
-        // Nos níveis sem ajuda o erro não se desfaz: a partida volta do início
-        return ctxRef.fail({ title: 'Regra quebrada!', rule: fail.rule, final: !!LV.semAjuda,
-          text: failText(fail) + (LV.semAjuda ? ' Neste nível não dá para desfazer: a partida recomeça do início.' : '') });
+        // No NG+ e no Danilo o erro não se desfaz: a partida volta do início
+        return ctxRef.fail({ title: 'Regra quebrada!', rule: fail.rule, final: !!LV.erroRecomeca,
+          text: failText(fail) + (LV.erroRecomeca ? ' Neste nível não dá para desfazer: a partida recomeça do início.' : '') });
       }
       if (IDS.every(id => S.loc[id] === 'B' || (S.loc[id] === 'R' && S.raft === 'B'))) return win();
       status = 'play';
@@ -884,6 +884,8 @@ function drawBg() {
     ctxRef.later(() => { status = 'play'; render(0); }, ms + 40);
   }
 
+  // A dica continua implementada, mas o botão está desligado em todos os níveis (DICAS = true religa)
+  const DICAS = false;
   const ROUTE_TXT = { AI: 'da partida até a ilha', IA: 'da ilha de volta para a partida', IB: 'da ilha até a chegada', BI: 'da chegada de volta para a ilha' };
   function hint() {
     if (status !== 'play') return;
@@ -931,7 +933,7 @@ function drawBg() {
       ctx.onResize(() => layout());
       layout();   // já na montagem
       const ctrl = { onPrimary: () => cross(primaryTo()), onAlt: () => cross(altTo()), onUndo: undo };
-      if (!LV.semAjuda) ctrl.onHint = hint;   // sem onHint, o kit esconde o botão Dica
+      if (DICAS) ctrl.onHint = hint;   // sem onHint, o kit esconde o botão Dica
       return ctrl;
     },
   });
