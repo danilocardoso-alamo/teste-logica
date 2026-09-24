@@ -280,11 +280,12 @@ const LEVELS = [
     ids: ['pai', 'mae', 'policial', 'ladrao', 'filho1', 'filho2', 'filha1', 'filha2', 'cao'] },
   { id: 'muito', name: 'Muito difícil', blurb: 'Dois ladrões, dois policiais e o cachorro no mesmo rio.', novo: 'ladrao',
     ids: ['pai', 'mae', 'policial', 'policial2', 'ladrao', 'ladrao2', 'filho1', 'filho2', 'filha1', 'filha2', 'cao'] },
-  { id: 'ngplus', name: 'NG+', extra: true, novo: 'criancas', regras: ['criancas'],
+  // semAjuda: nível sem dica e sem desfazer depois de um erro (quebrou uma regra, recomeça do início)
+  { id: 'ngplus', name: 'NG+', extra: true, semAjuda: true, novo: 'criancas', regras: ['criancas'],
     blurb: 'A revanche do Muito difícil, com dois cachorros e crianças que nunca podem ficar sem um adulto responsável.',
     ids: ['pai', 'mae', 'policial', 'policial2', 'ladrao', 'ladrao2', 'filho1', 'filho2', 'filha1', 'filha2', 'cao', 'cao2'] },
   // Nível Danilo: a família do Difícil, mas com três lugares (partida, ilha e chegada) e regras novas
-  { id: 'danilo', name: 'Danilo', extra: true, novo: ['rota', 'lotacao', 'correnteza', 'caoPai'], regras: ['caoPai'],
+  { id: 'danilo', name: 'Danilo', extra: true, semAjuda: true, novo: ['rota', 'lotacao', 'correnteza', 'caoPai'], regras: ['caoPai'],
     ilha: { cap: 4, correnteza: ['pol'] },
     blurb: 'Menos gente e regras novas: uma ilha no meio do rio, correnteza do lado da chegada e um cachorro que não suporta o ladrão.',
     ids: ['pai', 'mae', 'policial', 'ladrao', 'filho1', 'filho2', 'filha1', 'filha2', 'cao'] },
@@ -668,7 +669,10 @@ function drawBg() {
     `<path d="M16 25 Q15 16 19 9" fill="none" stroke="${INK}" stroke-width="4.2" stroke-linecap="round"/><path d="M16 25 Q15 16 19 9" fill="none" stroke="#8A5A33" stroke-width="2.2" stroke-linecap="round"/>` +
     `<g fill="#3FA66B" stroke="${INK}" stroke-width="1.2" stroke-linejoin="round"><path d="M19 9 Q11 5 5 11 Q12 8 19 9Z"/><path d="M19 9 Q27 4 33 10 Q26 8 19 9Z"/><path d="M19 9 Q17 2 10 2 Q16 4 19 9Z"/><path d="M19 9 Q23 2 29 3 Q23 5 19 9Z"/></g>` +
     (n ? `<circle cx="31" cy="29" r="7.5" fill="${INK}"/><text x="31" y="32.8" text-anchor="middle" font-family="Nunito,sans-serif" font-weight="900" font-size="11" fill="#fff">${n}</text>` : '') + `</svg>`;
-  const RAPIDS_ICO = `<svg viewBox="0 0 40 40" aria-hidden="true" focusable="false"><rect x="3" y="6" width="34" height="28" rx="8" fill="#2C84B3"/>` +
+  // Seta circular (recomeçar), para a regra dos níveis sem ajuda
+  const RESTART_ICO = `<svg viewBox="0 0 40 40" aria-hidden="true" focusable="false"><rect x="4" y="4" width="32" height="32" rx="10" fill="#D9463B"/>` +
+    `<g fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M27.5 20 A7.5 7.5 0 1 1 25.3 14.7"/><path d="M20.3 14.7 H25.3 V9.7"/></g></svg>`;
+  const RAPIDS_ICO =`<svg viewBox="0 0 40 40" aria-hidden="true" focusable="false"><rect x="3" y="6" width="34" height="28" rx="8" fill="#2C84B3"/>` +
     `<g fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12 l5 5 l5 -5 M21 12 l5 5 l5 -5"/><path d="M9 22 l5 5 l5 -5 M21 22 l5 5 l5 -5"/></g></svg>`;
 
   const ruleFig = k => figSVG(k, 'adult', 'ico-fig', '9 1 46 46').replace(/lz-clip/g, 'lz-clip-ico');
@@ -696,6 +700,8 @@ function drawBg() {
       html: 'As crianças nunca podem ficar <b>sem um adulto responsável</b> por perto: o pai, a mãe ou um policial. O ladrão não conta.' });
     if ((l.regras || []).includes('caoPai')) items.push({ key: 'caoPai', icon: figSVG('cao', 'pet', 'ico-fig', '4 -2 62 62'), novo: isNew('caoPai'),
       html: 'O cachorro não suporta o ladrão: os dois só podem ficar no mesmo lugar se <b>o pai</b> também estiver.' });
+    if (l.semAjuda) items.unshift({ key: 'semAjuda', icon: RESTART_ICO,
+      html: '<b>Sem dicas</b> neste nível. Quebrou uma regra, a partida volta <b>do início</b>.' });
     return items;
   }
 
@@ -789,7 +795,8 @@ function drawBg() {
     if (status === 'moving') return ctx.say('Atravessando…', riders.length ? `Na jangada: ${crewNames(riders)}.` : '');
     if (status !== 'play') return;
     if (!riders.length) return ctx.say(S.moves ? 'Quem vai agora?' : 'Sua vez', `Toque em alguém ${DA[S.raft]} para embarcar. Cabem 2 na jangada.` +
-      (onIsle ? ' Da ilha, a jangada pode voltar para a partida ou seguir para a chegada.' : ''));
+      (onIsle ? ' Da ilha, a jangada pode voltar para a partida ou seguir para a chegada.' : '') +
+      (LV.semAjuda && !S.moves ? ' Aqui não há dicas, e quem quebrar uma regra recomeça do início.' : ''));
     if (!riders.some(id => CAST[id].driver)) return ctx.say('Falta quem conduza', `${cap1(crewArt(riders))} não ${riders.length > 1 ? 'sabem' : 'sabe'} conduzir. Embarque ${count('pol') > 1 ? 'o pai, a mãe ou um policial' : 'o pai, a mãe ou o policial'}.`);
     const crew = `Na jangada: ${crewNames(riders)}.`;
     if (!LV.ilha) return ctx.say('Pronto para atravessar', `${crew} Toque em Atravessar.`);
@@ -850,7 +857,9 @@ function drawBg() {
       if (fail) {
         status = 'fail'; failInfo = fail;
         render(0);
-        return ctxRef.fail({ title: 'Regra quebrada!', text: failText(fail), rule: fail.rule });
+        // Nos níveis sem ajuda o erro não se desfaz: a partida volta do início
+        return ctxRef.fail({ title: 'Regra quebrada!', rule: fail.rule, final: !!LV.semAjuda,
+          text: failText(fail) + (LV.semAjuda ? ' Neste nível não dá para desfazer: a partida recomeça do início.' : '') });
       }
       if (IDS.every(id => S.loc[id] === 'B' || (S.loc[id] === 'R' && S.raft === 'B'))) return win();
       status = 'play';
@@ -921,7 +930,9 @@ function drawBg() {
       buildCast(ctx);
       ctx.onResize(() => layout());
       layout();   // já na montagem
-      return { onPrimary: () => cross(primaryTo()), onAlt: () => cross(altTo()), onUndo: undo, onHint: hint };
+      const ctrl = { onPrimary: () => cross(primaryTo()), onAlt: () => cross(altTo()), onUndo: undo };
+      if (!LV.semAjuda) ctrl.onHint = hint;   // sem onHint, o kit esconde o botão Dica
+      return ctrl;
     },
   });
 })();

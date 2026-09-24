@@ -9,7 +9,7 @@ Coleção de jogos de raciocínio lógico em uma página só, cada jogo com quat
 
 | Jogo | Arquivo | Ideia |
 |---|---|---|
-| Travessia do Rio | `travessia.js` | Levar família, policial e ladrão pela jangada sem quebrar as regras (tem ainda os níveis NG+ e Danilo; o Danilo tem uma ilha no meio do rio, correnteza e mínimo de 50 travessias) |
+| Travessia do Rio | `travessia.js` | Levar família, policial e ladrão pela jangada sem quebrar as regras (tem ainda os níveis NG+ e Danilo, sem dicas e em que quebrar uma regra faz recomeçar do início; o Danilo tem uma ilha no meio do rio, correnteza e mínimo de 50 travessias) |
 | Torre de Hanói | `hanoi.js` | Mover a torre, um disco por vez, sem pôr maior sobre menor |
 | Moeda falsa | `balanca.js` | Achar a moeda falsa na balança com poucas pesagens (a balança não deixa chutar) |
 | Jarras d'água | `jarras.js` | Medir uma quantidade exata enchendo, esvaziando e despejando |

@@ -54,7 +54,7 @@ Assim dá para testar a lógica no Node: `const L = require('./src/games/<id>.js
 - `ctx.alt(rotulo | null, { disabled })` — segundo botão de ação, à esquerda do principal, para quando há duas saídas (ex.: na ilha da Travessia, "Voltar para a partida" ao lado de "Seguir para a chegada"). Clique chama `ctrl.onAlt()`. No celular os dois dividem a linha.
 - `ctx.busy(bool)` — trava os botões durante animações.
 - `ctx.win({ score?, title?, text?, perfect? })` — vitória. `score` é o valor do recorde (padrão: o último `setMoves`). Sem `text`, o kit escreve a mensagem padrão comparando com o mínimo.
-- `ctx.fail({ title, text, rule })` — derrota/regra quebrada. Se o controlador tiver `onUndo`, aparece "Desfazer jogada" (o kit volta o status para jogo antes de chamar `onUndo`).
+- `ctx.fail({ title, text, rule, final? })` — derrota/regra quebrada. Se o controlador tiver `onUndo`, aparece "Desfazer jogada" (o kit volta o status para jogo antes de chamar `onUndo`). Com `final: true` a derrota não se desfaz: o Desfazer some e só fica "Recomeçar do início" (usado nos níveis NG+ e Danilo da Travessia).
 - `ctx.resume()` — volta de `fail` para jogo, se precisar.
 - `ctx.status` — `'play' | 'won' | 'fail'`.
 - `ctx.later(fn, ms)`, `ctx.every(fn, ms)`, `ctx.listen(alvo, evento, fn)`, `ctx.onResize(fn(larguraDoBoard))` — **use sempre estes** em vez de setTimeout/setInterval/addEventListener/ResizeObserver diretos: o kit desliga tudo ao trocar de nível ou sair.

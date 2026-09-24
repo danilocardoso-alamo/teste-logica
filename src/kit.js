@@ -200,6 +200,7 @@ const Jogos = (() => {
   function onUndo() {
     const s = cur;
     if (!s || s.busy || !s.ctrl || !s.ctrl.onUndo || s.status === 'won') return;
+    if (s.status === 'fail' && s.failInfo && s.failInfo.final) return;   // essa derrota só se resolve recomeçando
     if (s.status === 'fail') { s.status = 'play'; s.failInfo = null; }
     s.ctrl.onUndo();
     refresh();
@@ -361,21 +362,22 @@ const Jogos = (() => {
   function refreshBar() {
     const s = cur; if (!s || !ui) return;
     const c = s.ctrl || {}, won = s.status === 'won', fail = s.status === 'fail';
+    const final = fail && !!(s.failInfo && s.failInfo.final);   // derrota que não se desfaz: só recomeçar do início
     ui.bar.classList.toggle('won', won);
     ui.bar.classList.toggle('fail', fail);
     ui.btnHint.hidden = !c.onHint || won || fail;
     ui.btnHint.disabled = s.busy || s.controls.hint === false;
-    ui.btnUndo.hidden = !c.onUndo || won;
+    ui.btnUndo.hidden = !c.onUndo || won || final;
     ui.btnUndo.disabled = s.busy || (!fail && !s.controls.undo);
     ui.btnUndo.textContent = fail ? 'Desfazer jogada' : 'Desfazer';
     ui.btnUndo.classList.toggle('primary', fail && !!c.onUndo);
-    ui.btnReset.textContent = won ? 'Jogar de novo' : 'Recomeçar';
+    ui.btnReset.textContent = won ? 'Jogar de novo' : final ? 'Recomeçar do início' : 'Recomeçar';
     ui.btnReset.disabled = s.busy;
     ui.btnNew.hidden = !s.g.generated || won;
     ui.btnNew.disabled = s.busy;
     const next = s.g.levels[s.li + 1];
     ui.btnNext.hidden = !won || !next;
-    ui.btnReset.classList.toggle('primary', won && !next);
+    ui.btnReset.classList.toggle('primary', (won && !next) || final);
     ui.btnPrimary.hidden = !s.primaryCfg || won || fail;
     if (s.primaryCfg) {
       ui.primaryLabel.innerHTML = s.primaryCfg.label;
