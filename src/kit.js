@@ -111,11 +111,16 @@ const Jogos = (() => {
     document.title = NOME;
     const won = games.reduce((n, g) => n + g.levels.filter(l => isDone(g.id, l.id)).length, 0);
     const total = games.reduce((n, g) => n + g.levels.length, 0);
+    // Níveis além dos quatro de sempre (ex.: o NG+ da Travessia) ganham uma menção no menu
+    const extraTxt = games.filter(g => g.levels.length > 4).map(g => {
+      const names = g.levels.slice(4).map(l => l.name);
+      return `, e a ${g.name} tem ainda ${names.length > 1 ? `os níveis ${names.slice(0, -1).join(', ')} e ${names[names.length - 1]}` : `o nível ${names[0]}`}`;
+    }).join('');
     view().replaceChildren(h('section', { class: 'hub' },
       h('header', {},
         h('p', { class: 'eyebrow' }, 'Raciocínio lógico'),
         h('h1', {}, NOME),
-        h('p', { class: 'lede' }, `${games.length} jogos, cada um com quatro níveis de dificuldade. ` +
+        h('p', { class: 'lede' }, `${games.length} jogos, cada um com quatro níveis de dificuldade${extraTxt}. ` +
           (won ? `Você já venceu ${won} de ${total} níveis.` : 'Escolha um para começar; o Fácil de cada jogo é um bom aquecimento.'))),
       h('div', { class: 'cards' }, games.map(cardFor))));
     window.scrollTo(0, 0);
@@ -159,7 +164,11 @@ const Jogos = (() => {
     u.btnNext = h('button', { type: 'button', class: 'btn primary', onclick: () => cur && startLevel(cur.g, cur.li + 1) }, 'Próximo nível ', h('span', { class: 'arrow', 'aria-hidden': 'true' }, '→'));
     u.primaryLabel = h('span', {});
     u.btnPrimary = h('button', { type: 'button', class: 'btn primary', onclick: () => act('onPrimary') }, u.primaryLabel);
-    u.bar = h('div', { class: 'bar' }, u.msg, h('div', { class: 'actions' }, u.btnHint, u.btnUndo, u.btnReset, u.btnNew, u.btnNext, u.btnPrimary));
+    // Segundo botão de ação, à esquerda do principal (ex.: na ilha da Travessia, "voltar" ao lado de "seguir")
+    u.altLabel = h('span', {});
+    u.btnAlt = h('button', { type: 'button', class: 'btn primary', onclick: () => act('onAlt') }, u.altLabel);
+    u.actions = h('div', { class: 'actions' }, u.btnHint, u.btnUndo, u.btnReset, u.btnNew, u.btnNext, u.btnAlt, u.btnPrimary);
+    u.bar = h('div', { class: 'bar' }, u.msg, u.actions);
     u.rulesSub = h('p', { class: 'rules-sub' });
     u.rules = h('ul', {});
     u.how = h('p', { class: 'how' });
@@ -184,7 +193,7 @@ const Jogos = (() => {
   function act(name) {
     const s = cur;
     if (!s || s.busy || !s.ctrl || !s.ctrl[name]) return;
-    if (name === 'onPrimary' && (s.status !== 'play')) return;
+    if ((name === 'onPrimary' || name === 'onAlt') && (s.status !== 'play')) return;
     if (name === 'onHint' && s.status !== 'play') return;
     s.ctrl[name]();
   }
@@ -212,7 +221,7 @@ const Jogos = (() => {
     const level = g.levels[li];
     const s = cur = {
       g, li, level, seed: seed ?? JogosCore.newSeed(), status: 'play', moves: 0, min: null, minLabel: null,
-      base: null, warnMsg: null, hintMsg: null, busy: false, ctrl: null, primaryCfg: null,
+      base: null, warnMsg: null, hintMsg: null, busy: false, ctrl: null, primaryCfg: null, altCfg: null,
       controls: { hint: true, undo: false }, hintsUsed: 0, failInfo: null, winInfo: null, newRecord: false,
     };
     ui.board.replaceChildren();
@@ -260,6 +269,7 @@ const Jogos = (() => {
       setMin(n, label) { if (!alive()) return; s.min = n; s.minLabel = label || null; refreshStats(); },
       controls(o) { if (!alive()) return; Object.assign(s.controls, o); refreshBar(); },
       primary(label, opts) { if (!alive()) return; s.primaryCfg = label ? Object.assign({ label }, opts) : null; refreshBar(); },
+      alt(label, opts) { if (!alive()) return; s.altCfg = label ? Object.assign({ label }, opts) : null; refreshBar(); },
       busy(b) { if (!alive()) return; s.busy = !!b; refreshBar(); },
       win(o = {}) {
         if (!alive() || s.status === 'won') return;
@@ -302,9 +312,10 @@ const Jogos = (() => {
 
   function renderLevels() {
     const s = cur, g = s.g;
+    ui.levels.style.setProperty('--nlv', g.levels.length);
     ui.levels.replaceChildren(...g.levels.map((l, i) => {
       const b = best.get(g.id, l.id);
-      return h('button', { type: 'button', class: 'lvl', 'data-i': i, 'aria-pressed': String(i === s.li) },
+      return h('button', { type: 'button', class: 'lvl' + (l.extra ? ' lvl-extra' : ''), 'data-i': i, 'aria-pressed': String(i === s.li) },
         h('span', { class: 'n' }, l.name || ['Fácil', 'Médio', 'Difícil', 'Muito difícil'][i],
           b != null ? h('span', { class: 'ok', title: 'Seu recorde' }, '✓ ' + fmt(g, b)) : isDone(g.id, l.id) ? h('span', { class: 'ok', title: 'Vencido com dicas' }, '✓') : null),
         l.sub ? h('span', { class: 's', html: l.sub }) : null);
@@ -370,6 +381,12 @@ const Jogos = (() => {
       ui.primaryLabel.innerHTML = s.primaryCfg.label;
       ui.btnPrimary.setAttribute('aria-disabled', String(!!s.primaryCfg.disabled || s.busy));
     }
+    ui.btnAlt.hidden = !s.altCfg || won || fail;
+    if (s.altCfg) {
+      ui.altLabel.innerHTML = s.altCfg.label;
+      ui.btnAlt.setAttribute('aria-disabled', String(!!s.altCfg.disabled || s.busy));
+    }
+    ui.actions.classList.toggle('duo', !ui.btnAlt.hidden && !ui.btnPrimary.hidden);
     ui.levels.querySelectorAll('.lvl').forEach(b => { b.disabled = s.busy; });
     ui.rules.querySelectorAll('li').forEach(li => li.classList.toggle('broken', fail && !!s.failInfo && s.failInfo.rule != null && li.dataset.rule === String(s.failInfo.rule)));
     let m, cls = '';

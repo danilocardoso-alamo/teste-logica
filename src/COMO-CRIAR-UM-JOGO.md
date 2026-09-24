@@ -1,6 +1,6 @@
 # Como criar um jogo na coleção "Jogos de lógica do Danilo"
 
-A página final (`jogos-de-logica.html`) é gerada por `node build.js`, que junta:
+A página final (`index.html`) é gerada por `node build.js`, que junta:
 `src/shell.html` + `src/kit.css` + `src/kit-core.js` + `src/kit.js` + `src/games/*.js`.
 
 Cada jogo é **um arquivo** `src/games/<id>.js`. O modelo de referência é `src/games/hanoi.js` — leia-o inteiro antes de começar.
@@ -33,7 +33,7 @@ Assim dá para testar a lógica no Node: `const L = require('./src/games/<id>.js
 | `metric` | `{ label: 'Movimentos', unit: ['movimento','movimentos'], format: 'count' }` ou `format: 'time'` (segundos, exibido m:ss). O recorde é sempre "menor é melhor" |
 | `generated` | `true` se cada partida sorteia um desafio novo (mostra o botão "Novo desafio") |
 | `freshRestart` | `true` se "Recomeçar" deve sortear outro desafio (jogos de informação escondida, em que quem perdeu já viu a resposta) |
-| `levels` | **4 níveis**: `{ id: 'facil'|'medio'|'dificil'|'muito', name: 'Fácil'|'Médio'|'Difícil'|'Muito difícil', sub, blurb, ...parâmetros }`. `sub` é a linha curta do botão (HTML; use `<span class="cnt">…</span>` para a parte que some no celular), `blurb` é uma frase para o painel de regras |
+| `levels` | **4 níveis** (níveis extras opcionais, como o NG+ e o Danilo da Travessia, levam `extra: true` e ganham destaque no seletor): `{ id: 'facil'|'medio'|'dificil'|'muito', name: 'Fácil'|'Médio'|'Difícil'|'Muito difícil', sub, blurb, ...parâmetros }`. `sub` é a linha curta do botão (HTML; use `<span class="cnt">…</span>` para a parte que some no celular), `blurb` é uma frase para o painel de regras |
 | `rules(level)` | lista `[{ key, icon?, html, novo? }]` para o painel "Regras". `key` permite destacar a regra quebrada |
 | `how` | texto (HTML) "como jogar", ou função `(level) => texto` |
 | `mount(ctx)` | monta o nível dentro de `ctx.board` e devolve o controlador (abaixo) |
@@ -51,6 +51,7 @@ Assim dá para testar a lógica no Node: `const L = require('./src/games/<id>.js
 - `ctx.setMin(n, rotulo?)` — mostra "Mínimo possível" (ou outro rótulo, ex.: 'Pesagens permitidas'). `null` esconde a caixa.
 - `ctx.controls({ undo: bool, hint: bool })` — habilita/desabilita Desfazer e Dica.
 - `ctx.primary(rotulo | null, { disabled })` — botão principal laranja (ex.: "Pesar", "Testar senha"). Clique chama `ctrl.onPrimary()`.
+- `ctx.alt(rotulo | null, { disabled })` — segundo botão de ação, à esquerda do principal, para quando há duas saídas (ex.: na ilha da Travessia, "Voltar para a partida" ao lado de "Seguir para a chegada"). Clique chama `ctrl.onAlt()`. No celular os dois dividem a linha.
 - `ctx.busy(bool)` — trava os botões durante animações.
 - `ctx.win({ score?, title?, text?, perfect? })` — vitória. `score` é o valor do recorde (padrão: o último `setMoves`). Sem `text`, o kit escreve a mensagem padrão comparando com o mínimo.
 - `ctx.fail({ title, text, rule })` — derrota/regra quebrada. Se o controlador tiver `onUndo`, aparece "Desfazer jogada" (o kit volta o status para jogo antes de chamar `onUndo`).
@@ -62,7 +63,7 @@ Assim dá para testar a lógica no Node: `const L = require('./src/games/<id>.js
 
 ## Controlador (retorno de mount)
 
-`{ onHint?, onUndo?, onPrimary?, destroy? }` — sem `onHint` o botão Dica some; sem `onUndo`, o Desfazer some. "Recomeçar", "Novo desafio", troca de nível e "Próximo nível" são do kit (ele remonta o nível).
+`{ onHint?, onUndo?, onPrimary?, onAlt?, destroy? }` — sem `onHint` o botão Dica some; sem `onUndo`, o Desfazer some. "Recomeçar", "Novo desafio", troca de nível e "Próximo nível" são do kit (ele remonta o nível).
 
 ## Padrões de qualidade
 

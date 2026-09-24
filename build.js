@@ -1,10 +1,10 @@
-// Junta o kit e todos os jogos em um único arquivo: jogos-de-logica.html
+// Junta o kit e todos os jogos em um único arquivo: index.html
 // Uso: node build.js
 const fs = require('fs');
 const path = require('path');
 
 const SRC = path.join(__dirname, 'src');
-const OUT = path.join(__dirname, 'jogos-de-logica.html');
+const OUT = path.join(__dirname, 'index.html');
 // Ordem em que os jogos aparecem no menu
 const ORDER = ['travessia', 'hanoi', 'balanca', 'jarras', 'senha', 'transito', 'luzes', 'sudoku', 'deslizante', 'rainhas', 'quem-mora-onde'];
 
@@ -31,4 +31,4 @@ const html = read('shell.html')
 
 // O arquivo local leva o doctype (modo padrão do navegador). Na publicação como Artifact ele é removido, porque a plataforma já envolve a página num esqueleto com doctype.
 fs.writeFileSync(OUT, '<!doctype html>\n' + html);
-console.log(`jogos-de-logica.html: ${games.length} jogos (${[...found, ...extra].join(', ')}), ${(html.length / 1024).toFixed(0)} KB`);
+console.log(`index.html: ${games.length} jogos (${[...found, ...extra].join(', ')}), ${(html.length / 1024).toFixed(0)} KB`);

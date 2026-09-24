@@ -2,14 +2,14 @@
 
 Coleção de jogos de raciocínio lógico em uma página só, cada jogo com quatro níveis (Fácil, Médio, Difícil e Muito difícil), dica, desfazer e recorde por nível.
 
-- **Para jogar:** abra `jogos-de-logica.html` no navegador.
-- **Travessia do Rio sozinha:** `index.html` (a primeira versão, independente da coleção).
+- **Para jogar:** abra `index.html` no navegador.
+- **Travessia do Rio sozinha:** `index-2.html` (a primeira versão, independente da coleção, sem os níveis NG+ e Danilo).
 
 ## Jogos
 
 | Jogo | Arquivo | Ideia |
 |---|---|---|
-| Travessia do Rio | `travessia.js` | Levar família, policial e ladrão pela jangada sem quebrar as regras |
+| Travessia do Rio | `travessia.js` | Levar família, policial e ladrão pela jangada sem quebrar as regras (tem ainda os níveis NG+ e Danilo; o Danilo tem uma ilha no meio do rio, correnteza e mínimo de 50 travessias) |
 | Torre de Hanói | `hanoi.js` | Mover a torre, um disco por vez, sem pôr maior sobre menor |
 | Moeda falsa | `balanca.js` | Achar a moeda falsa na balança com poucas pesagens (a balança não deixa chutar) |
 | Jarras d'água | `jarras.js` | Medir uma quantidade exata enchendo, esvaziando e despejando |
@@ -24,7 +24,7 @@ Coleção de jogos de raciocínio lógico em uma página só, cada jogo com quat
 ## Estrutura
 
 ```
-build.js                 junta tudo em jogos-de-logica.html
+build.js                 junta tudo em index.html
 src/shell.html           esqueleto da página
 src/kit.css              visual comum (cores, tema claro/escuro, botões, níveis, painel de regras)
 src/kit-core.js          utilidades puras (sorteio com semente, busca em largura, formatação)

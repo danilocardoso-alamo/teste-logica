@@ -68,12 +68,14 @@ body{margin:0;background:var(--page);color:var(--ink);font:400 16px/1.5 "Nunito"
 .stage{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:0 18px 40px -28px rgba(15,40,35,.55);min-width:0}
 
 /* níveis */
-.levels{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:10px;border-bottom:1px solid var(--line)}
+.levels{display:grid;grid-template-columns:repeat(var(--nlv,4),minmax(0,1fr));gap:6px;padding:10px;border-bottom:1px solid var(--line)}
 .lvl{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;padding:8px 12px 9px;border-radius:12px;border:1px solid var(--line);background:var(--page);color:var(--ink);font:inherit;text-align:left;cursor:pointer;transition:border-color .15s,background .15s,color .15s}
 .lvl:hover{border-color:var(--ink-2)}
 .lvl:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 .lvl[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--page)}
 .lvl:disabled{cursor:wait}
+.lvl.lvl-extra:not([aria-pressed="true"]){border-color:color-mix(in srgb,var(--accent-2) 55%,var(--line))}
+.lvl.lvl-extra:not([aria-pressed="true"]) .n{color:var(--accent-2)}
 .lvl .n{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font:800 17px/1.1 "Baloo 2","Nunito",sans-serif}
 .lvl .s{font-size:12px;font-weight:700;opacity:.72;font-variant-numeric:tabular-nums}
 .lvl .ok{padding:2px 7px 1px;border-radius:999px;background:var(--ok);color:#fff;font:900 11px/1.3 "Nunito",sans-serif;font-variant-numeric:tabular-nums}
@@ -126,6 +128,7 @@ body{margin:0;background:var(--page);color:var(--ink);font:400 16px/1.5 "Nunito"
   .stats div{min-width:0;flex:1;padding:6px 10px 4px}
   .stats dd{font-size:24px}
   .levels{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .levels .lvl:last-child:nth-child(odd){grid-column:1/-1}
   .lvl{padding:7px 10px 8px}
   .lvl .n{font-size:15px}
   .lvl .cnt{display:none}
@@ -133,6 +136,7 @@ body{margin:0;background:var(--page);color:var(--ink);font:400 16px/1.5 "Nunito"
   .actions{width:100%}
   .actions .btn{flex:1 1 30%;padding:0 10px}
   .actions .btn.primary{flex-basis:100%;order:-1}
+  .actions.duo .btn.primary{flex-basis:calc(50% - 4px)}
   .gv-title .gi{display:none}
 }
 @media (prefers-reduced-motion: reduce){
